@@ -7,7 +7,7 @@
 body{font-family:Arial;background:#111;color:#fff;text-align:center}
 .box{border:1px solid #333;border-radius:10px;padding:10px;margin:10px}
 button{padding:10px 20px;margin:5px;border:none;border-radius:5px}
-#log{height:120px;overflow:auto;background:#000;padding:5px}
+#log,#chatbox{height:120px;overflow:auto;background:#000;padding:5px}
 input{padding:6px}
 </style>
 </head>
@@ -16,8 +16,7 @@ input{padding:6px}
 <h1>🎲 KEM – TÀI XỈU</h1>
 
 <div class="box">
-💰 Số dư: <b id="money">1000</b>
-<br>
+💰 Số dư: <b id="money"></b><br>
 <button onclick="nap()">Nạp +500</button>
 <button onclick="rut()">Rút -500</button>
 </div>
@@ -34,13 +33,29 @@ input{padding:6px}
 <input id="name" placeholder="Tên">
 <input id="msg" placeholder="Nội dung">
 <button onclick="chat()">Gửi</button>
-<div id="chatbox" style="height:100px;overflow:auto;background:#000"></div>
+<div id="chatbox"></div>
 </div>
 
 <script>
-let money=1000;
-let log=document.getElementById("log");
-let chatbox=document.getElementById("chatbox");
+let money = Number(localStorage.money || 1000);
+let logs = JSON.parse(localStorage.logs || "[]");
+let chats = JSON.parse(localStorage.chats || "[]");
+
+const moneyEl = document.getElementById("money");
+const logEl = document.getElementById("log");
+const chatEl = document.getElementById("chatbox");
+
+function save(){
+ localStorage.money = money;
+ localStorage.logs = JSON.stringify(logs);
+ localStorage.chats = JSON.stringify(chats);
+}
+
+function render(){
+ moneyEl.innerText = money;
+ logEl.innerHTML = logs.join("<br>");
+ chatEl.innerHTML = chats.join("");
+}
 
 function rand(){return Math.floor(Math.random()*6)+1}
 
@@ -52,21 +67,25 @@ function choi(chon){
  let text=`🎲 ${a}-${b}-${c} = ${sum} → ${kq.toUpperCase()}`;
  if(chon===kq){money+=100;text+=" ✅ Thắng"}
  else{money-=100;text+=" ❌ Thua"}
- document.getElementById("money").innerText=money;
- document.getElementById("ketqua").innerText=text;
- log.innerHTML=text+"<br>"+log.innerHTML;
+ logs.unshift(text);
+ if(logs.length>20)logs.pop();
+ save();render();
 }
 
-function nap(){money+=500;document.getElementById("money").innerText=money}
-function rut(){money=Math.max(0,money-500);document.getElementById("money").innerText=money}
+function nap(){money+=500;save();render()}
+function rut(){money=Math.max(0,money-500);save();render()}
 
 function chat(){
  let n=name.value||"Khách";
  let m=msg.value;
  if(!m)return;
- chatbox.innerHTML+=`<div><b>${n}:</b> ${m}</div>`;
+ chats.push(`<div><b>${n}:</b> ${m}</div>`);
+ if(chats.length>20)chats.shift();
  msg.value="";
+ save();render();
 }
+
+render();
 </script>
 
 </body>
