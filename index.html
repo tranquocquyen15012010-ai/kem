@@ -2,91 +2,155 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>KEM – Tài Xỉu</title>
+<title>Tài Xỉu KEM</title>
 <style>
-body{font-family:Arial;background:#111;color:#fff;text-align:center}
-.box{border:1px solid #333;border-radius:10px;padding:10px;margin:10px}
-button{padding:10px 20px;margin:5px;border:none;border-radius:5px}
-#log,#chatbox{height:120px;overflow:auto;background:#000;padding:5px}
-input{padding:6px}
+body{
+  margin:0;
+  background:linear-gradient(#0f2027,#203a43,#2c5364);
+  color:white;
+  font-family:Arial;
+  overflow:hidden;
+  text-align:center;
+}
+h1{margin:10px;}
+#balance{font-size:20px;margin:10px;}
+button{
+  padding:12px 25px;
+  font-size:18px;
+  border-radius:10px;
+  border:none;
+  margin:5px;
+  cursor:pointer;
+}
+#game{margin-top:20px;}
+#bowl{
+  font-size:120px;
+  cursor:pointer;
+  transition:transform .5s;
+}
+#dice{font-size:60px;display:none;}
+.animal,.student{
+  position:absolute;
+  font-size:45px;
+  animation:move linear infinite;
+}
+.animal{top:300px;}
+.student{top:200px;}
+@keyframes move{
+  0%{left:-60px;}
+  100%{left:110%;}
+}
+#chat{
+  position:fixed;
+  right:10px;
+  bottom:10px;
+  width:220px;
+  background:#000a;
+  padding:10px;
+  border-radius:10px;
+}
+#messages{
+  height:120px;
+  overflow:auto;
+  font-size:14px;
+  text-align:left;
+}
+input{
+  width:100%;
+  padding:5px;
+}
 </style>
 </head>
+
 <body>
+<h1>🎲 TÀI XỈU KEM 🎲</h1>
+<div id="balance"></div>
 
-<h1>🎲 KEM – TÀI XỈU</h1>
+<div id="game">
+  <button onclick="bet('Tài')">TÀI</button>
+  <button onclick="bet('Xỉu')">XỈU</button>
 
-<div class="box">
-💰 Số dư: <b id="money"></b><br>
-<button onclick="nap()">Nạp +500</button>
-<button onclick="rut()">Rút -500</button>
+  <div id="bowl" onclick="shake()">🥣</div>
+  <div id="dice">🎲 🎲 🎲</div>
+  <div id="result"></div>
 </div>
 
-<div class="box">
-<button onclick="choi('tai')">CHƠI TÀI</button>
-<button onclick="choi('xiu')">CHƠI XỈU</button>
-<p id="ketqua"></p>
-<div id="log"></div>
-</div>
+<div class="animal" style="animation-duration:7s">🐯</div>
+<div class="animal" style="top:350px;animation-duration:9s">🐲</div>
+<div class="animal" style="top:400px;animation-duration:6s">🐶</div>
 
-<div class="box">
-<h3>💬 CHAT</h3>
-<input id="name" placeholder="Tên">
-<input id="msg" placeholder="Nội dung">
-<button onclick="chat()">Gửi</button>
-<div id="chatbox"></div>
+<div class="student" style="animation-duration:8s">🧑‍🎓</div>
+
+<div id="chat">
+  <b>💬 Chat</b>
+  <div id="messages"></div>
+  <input placeholder="Nhập chat..." onkeydown="send(event)">
 </div>
 
 <script>
-let money = Number(localStorage.money || 1000);
-let logs = JSON.parse(localStorage.logs || "[]");
-let chats = JSON.parse(localStorage.chats || "[]");
+let balance=Number(localStorage.kemBalance)||1000;
+let choice=null;
 
-const moneyEl = document.getElementById("money");
-const logEl = document.getElementById("log");
-const chatEl = document.getElementById("chatbox");
+function update(){
+  balance=Math.max(0,balance);
+  document.getElementById("balance").innerText="💰 Tiền: "+balance;
+  localStorage.kemBalance=balance;
+}
+update();
 
-function save(){
- localStorage.money = money;
- localStorage.logs = JSON.stringify(logs);
- localStorage.chats = JSON.stringify(chats);
+function bet(c){
+  choice=c;
+  alert("Bạn chọn "+c);
 }
 
-function render(){
- moneyEl.innerText = money;
- logEl.innerHTML = logs.join("<br>");
- chatEl.innerHTML = chats.join("");
+function shake(){
+  if(!choice){alert("Chọn Tài hoặc Xỉu");return;}
+  let bowl=document.getElementById("bowl");
+  let dice=document.getElementById("dice");
+  bowl.style.transform="rotate(20deg)";
+  setTimeout(()=>bowl.style.transform="rotate(-20deg)",200);
+  setTimeout(()=>bowl.style.transform="rotate(0)",400);
+
+  setTimeout(()=>{
+    bowl.style.display="none";
+    dice.style.display="block";
+    let d1=rand(),d2=rand(),d3=rand();
+    let sum=d1+d2+d3;
+    dice.innerText=icon(d1)+" "+icon(d2)+" "+icon(d3);
+    let rs=sum>=11?"Tài":"Xỉu";
+    if(rs===choice){
+      balance+=100;
+      msg("🎉 Thắng "+rs);
+    }else{
+      balance-=100;
+      msg("❌ Thua "+rs);
+    }
+    document.getElementById("result").innerText=
+      `Tổng: ${sum} → ${rs}`;
+    update();
+    setTimeout(()=>{
+      bowl.style.display="block";
+      dice.style.display="none";
+      choice=null;
+    },2000);
+  },600);
 }
 
-function rand(){return Math.floor(Math.random()*6)+1}
+function rand(){return Math.floor(Math.random()*6)+1;}
+function icon(n){return ["","⚀","⚁","⚂","⚃","⚄","⚅"][n];}
 
-function choi(chon){
- if(money<100){alert("Không đủ tiền");return}
- let a=rand(),b=rand(),c=rand();
- let sum=a+b+c;
- let kq=sum>=11?"tai":"xiu";
- let text=`🎲 ${a}-${b}-${c} = ${sum} → ${kq.toUpperCase()}`;
- if(chon===kq){money+=100;text+=" ✅ Thắng"}
- else{money-=100;text+=" ❌ Thua"}
- logs.unshift(text);
- if(logs.length>20)logs.pop();
- save();render();
+function msg(t){
+  let m=document.getElementById("messages");
+  m.innerHTML+="<div>"+t+"</div>";
+  m.scrollTop=m.scrollHeight;
 }
 
-function nap(){money+=500;save();render()}
-function rut(){money=Math.max(0,money-500);save();render()}
-
-function chat(){
- let n=name.value||"Khách";
- let m=msg.value;
- if(!m)return;
- chats.push(`<div><b>${n}:</b> ${m}</div>`);
- if(chats.length>20)chats.shift();
- msg.value="";
- save();render();
+function send(e){
+  if(e.key==="Enter"&&e.target.value){
+    msg("👤 "+e.target.value);
+    e.target.value="";
+  }
 }
-
-render();
 </script>
-
 </body>
 </html>
