@@ -1,11 +1,73 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
-  <meta charset="utf-8">
-  <title>KEM TX</title>
+<meta charset="UTF-8">
+<title>KEM – Tài Xỉu</title>
+<style>
+body{font-family:Arial;background:#111;color:#fff;text-align:center}
+.box{border:1px solid #333;border-radius:10px;padding:10px;margin:10px}
+button{padding:10px 20px;margin:5px;border:none;border-radius:5px}
+#log{height:120px;overflow:auto;background:#000;padding:5px}
+input{padding:6px}
+</style>
 </head>
 <body>
-  <h1>🎲 Game Tài Xỉu KEM</h1>
-  <button onclick="alert('Đang test')">CHƠI</button>
+
+<h1>🎲 KEM – TÀI XỈU</h1>
+
+<div class="box">
+💰 Số dư: <b id="money">1000</b>
+<br>
+<button onclick="nap()">Nạp +500</button>
+<button onclick="rut()">Rút -500</button>
+</div>
+
+<div class="box">
+<button onclick="choi('tai')">CHƠI TÀI</button>
+<button onclick="choi('xiu')">CHƠI XỈU</button>
+<p id="ketqua"></p>
+<div id="log"></div>
+</div>
+
+<div class="box">
+<h3>💬 CHAT</h3>
+<input id="name" placeholder="Tên">
+<input id="msg" placeholder="Nội dung">
+<button onclick="chat()">Gửi</button>
+<div id="chatbox" style="height:100px;overflow:auto;background:#000"></div>
+</div>
+
+<script>
+let money=1000;
+let log=document.getElementById("log");
+let chatbox=document.getElementById("chatbox");
+
+function rand(){return Math.floor(Math.random()*6)+1}
+
+function choi(chon){
+ if(money<100){alert("Không đủ tiền");return}
+ let a=rand(),b=rand(),c=rand();
+ let sum=a+b+c;
+ let kq=sum>=11?"tai":"xiu";
+ let text=`🎲 ${a}-${b}-${c} = ${sum} → ${kq.toUpperCase()}`;
+ if(chon===kq){money+=100;text+=" ✅ Thắng"}
+ else{money-=100;text+=" ❌ Thua"}
+ document.getElementById("money").innerText=money;
+ document.getElementById("ketqua").innerText=text;
+ log.innerHTML=text+"<br>"+log.innerHTML;
+}
+
+function nap(){money+=500;document.getElementById("money").innerText=money}
+function rut(){money=Math.max(0,money-500);document.getElementById("money").innerText=money}
+
+function chat(){
+ let n=name.value||"Khách";
+ let m=msg.value;
+ if(!m)return;
+ chatbox.innerHTML+=`<div><b>${n}:</b> ${m}</div>`;
+ msg.value="";
+}
+</script>
+
 </body>
 </html>
